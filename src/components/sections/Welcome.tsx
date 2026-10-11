@@ -27,7 +27,7 @@ export const Welcome = () => {
           </p>
 
           <p className="text-text-subtle text-sm md:text-base leading-relaxed">
-            Established in 2021, Ravana Group has evolved into a prominent entity in the UK,
+            Established in 2021, Star Civic Empire Group has evolved into a prominent entity in the Kenya,
             encompassing four distinct yet interconnected businesses. Our journey is marked
             by a dedication to redefining entertainment, lifestyle, and community engagement.
           </p>
