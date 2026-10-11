@@ -44,3 +44,28 @@ export interface SocialLink {
   href: string;
   icon: string;
 }
+
+/* ============ NEW ============ */
+
+export interface GalleryImage {
+  id: string;
+  url: string;
+  alt: string;
+  createdAt: number;
+}
+
+export interface Review {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  rating: number;       // 1-5
+  status: 'pending' | 'approved';
+  createdAt: number;
+}
+
+export interface AdminUser {
+  email: string;
+  name: string;
+  role: 'admin';
+}

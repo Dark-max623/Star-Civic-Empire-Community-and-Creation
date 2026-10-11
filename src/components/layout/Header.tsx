@@ -1,11 +1,24 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
 import { navLinks } from '../../data/navLinks';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
+import { useAuth } from '../../context/AuthContext';
 
 export const Header = () => {
   const isScrolled = useScrollPosition(30);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleClientPortal = () => {
+    setIsMenuOpen(false);
+    if (isAuthenticated) {
+      navigate('/admin/dashboard');
+    } else {
+      navigate('/admin/login');
+    }
+  };
 
   return (
     <header
@@ -16,24 +29,24 @@ export const Header = () => {
       }`}
     >
       <div className="section-container flex items-center justify-between h-16 md:h-20">
-        {/* Logo */}
-        <a href="#home" className="flex items-center gap-2 shrink-0">
+        <Link to="/" className="flex items-center gap-2 shrink-0">
           <span className="text-gold-primary font-extrabold text-xl md:text-2xl tracking-tight">
-            STAR CIVIC EMPIRE
+            RAVANA
           </span>
           <span className="text-text-primary text-xs md:text-sm font-light tracking-widest">
             GROUP
           </span>
-        </a>
+        </Link>
 
-        {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-10">
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
               className={`text-xs md:text-sm font-medium tracking-widest uppercase transition-colors duration-200 ${
-                link.isActive ? 'text-gold-primary' : 'text-text-primary hover:text-gold-primary'
+                link.isActive
+                  ? 'text-gold-primary'
+                  : 'text-text-primary hover:text-gold-primary'
               }`}
             >
               {link.label}
@@ -41,14 +54,13 @@ export const Header = () => {
           ))}
         </nav>
 
-        {/* Client Portal + Mobile Toggle */}
         <div className="flex items-center gap-4">
-          <a
-            href="#portal"
+          <button
+            onClick={handleClientPortal}
             className="hidden md:inline-block text-xs md:text-sm font-medium tracking-widest uppercase text-gold-primary border-b border-gold-primary pb-1 hover:text-gold-hover hover:border-gold-hover transition-colors"
           >
-            Client Portal
-          </a>
+            {isAuthenticated ? 'Admin Dashboard' : 'Client Portal'}
+          </button>
 
           <button
             aria-label="Toggle menu"
@@ -74,7 +86,6 @@ export const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.nav
@@ -97,13 +108,12 @@ export const Header = () => {
                   {link.label}
                 </a>
               ))}
-              <a
-                href="#portal"
-                onClick={() => setIsMenuOpen(false)}
-                className="text-sm font-medium tracking-widest uppercase text-gold-primary"
+              <button
+                onClick={handleClientPortal}
+                className="text-left text-sm font-medium tracking-widest uppercase text-gold-primary"
               >
-                Client Portal
-              </a>
+                {isAuthenticated ? 'Admin Dashboard' : 'Client Portal'}
+              </button>
             </div>
           </motion.nav>
         )}

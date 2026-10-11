@@ -3,7 +3,7 @@ import type { Event } from '../types';
 export const events: Event[] = [
   {
     id: 'weeknd-tour',
-    title: 'The Weeknd UK Tour',
+    title: 'The Weeknd Kenya Tour',
     date: '15 Dec 2025',
     location: 'The O2, London',
     imageUrl:
@@ -12,7 +12,7 @@ export const events: Event[] = [
   },
   {
     id: 'charity-gala',
-    title: 'Ravana Charity Gala',
+    title: 'Star Civic Charity Gala',
     date: '22 Jan 2026',
     location: 'The Ritz, London',
     imageUrl:
