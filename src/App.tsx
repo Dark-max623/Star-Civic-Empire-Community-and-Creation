@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 
@@ -39,11 +39,15 @@ function App() {
       <DataProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public */}
             <Route path="/" element={<PublicHome />} />
 
-            {/* Admin */}
-            <Route path="/admin/login" element={<LoginPage />} />
+            {/* Primary login route */}
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* Legacy alias */}
+            <Route path="/admin/login" element={<Navigate to="/login" replace />} />
+
+            {/* Protected admin */}
             <Route
               path="/admin"
               element={
@@ -57,6 +61,9 @@ function App() {
               <Route path="reviews" element={<ReviewsPage />} />
               <Route path="events" element={<EventsPage />} />
             </Route>
+
+            {/* Catch-all → home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </DataProvider>

@@ -8,16 +8,23 @@ import { useAuth } from '../../context/AuthContext';
 export const Header = () => {
   const isScrolled = useScrollPosition(30);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleClientPortal = () => {
+  const handleLoginClick = () => {
     setIsMenuOpen(false);
     if (isAuthenticated) {
+      // If already logged in, take them straight to the admin side
       navigate('/admin/dashboard');
     } else {
-      navigate('/admin/login');
+      navigate('/login');
     }
+  };
+
+  const handleLogoutClick = () => {
+    setIsMenuOpen(false);
+    logout();
+    navigate('/');
   };
 
   return (
@@ -29,15 +36,17 @@ export const Header = () => {
       }`}
     >
       <div className="section-container flex items-center justify-between h-16 md:h-20">
+        {/* Logo */}
         <Link to="/" className="flex items-center gap-2 shrink-0">
           <span className="text-gold-primary font-extrabold text-xl md:text-2xl tracking-tight">
-            RAVANA
+            STAR CIVIC
           </span>
           <span className="text-text-primary text-xs md:text-sm font-light tracking-widest">
-            GROUP
+            EMPIRE
           </span>
         </Link>
 
+        {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-10">
           {navLinks.map((link) => (
             <a
@@ -54,13 +63,31 @@ export const Header = () => {
           ))}
         </nav>
 
+        {/* Right side: Login / Logout + Mobile toggle */}
         <div className="flex items-center gap-4">
-          <button
-            onClick={handleClientPortal}
-            className="hidden md:inline-block text-xs md:text-sm font-medium tracking-widest uppercase text-gold-primary border-b border-gold-primary pb-1 hover:text-gold-hover hover:border-gold-hover transition-colors"
-          >
-            {isAuthenticated ? 'Admin Dashboard' : 'Client Portal'}
-          </button>
+          {isAuthenticated ? (
+            <div className="hidden md:flex items-center gap-4">
+              <button
+                onClick={handleLoginClick}
+                className="text-xs md:text-sm font-medium tracking-widest uppercase text-text-primary hover:text-gold-primary transition-colors"
+              >
+                Admin
+              </button>
+              <button
+                onClick={handleLogoutClick}
+                className="text-xs md:text-sm font-medium tracking-widest uppercase text-gold-primary border-b border-gold-primary pb-1 hover:text-gold-hover hover:border-gold-hover transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleLoginClick}
+              className="hidden md:inline-block text-xs md:text-sm font-medium tracking-widest uppercase text-gold-primary border-b border-gold-primary pb-1 hover:text-gold-hover hover:border-gold-hover transition-colors"
+            >
+              Login
+            </button>
+          )}
 
           <button
             aria-label="Toggle menu"
@@ -86,6 +113,7 @@ export const Header = () => {
         </div>
       </div>
 
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.nav
@@ -108,12 +136,30 @@ export const Header = () => {
                   {link.label}
                 </a>
               ))}
-              <button
-                onClick={handleClientPortal}
-                className="text-left text-sm font-medium tracking-widest uppercase text-gold-primary"
-              >
-                {isAuthenticated ? 'Admin Dashboard' : 'Client Portal'}
-              </button>
+
+              {isAuthenticated ? (
+                <>
+                  <button
+                    onClick={handleLoginClick}
+                    className="text-left text-sm font-medium tracking-widest uppercase text-text-primary"
+                  >
+                    Admin
+                  </button>
+                  <button
+                    onClick={handleLogoutClick}
+                    className="text-left text-sm font-medium tracking-widest uppercase text-gold-primary"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={handleLoginClick}
+                  className="text-left text-sm font-medium tracking-widest uppercase text-gold-primary"
+                >
+                  Login
+                </button>
+              )}
             </div>
           </motion.nav>
         )}

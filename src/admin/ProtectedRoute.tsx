@@ -7,7 +7,9 @@ export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+    // Send the visitor to /login and remember where they were heading
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
   return <>{children}</>;
 };

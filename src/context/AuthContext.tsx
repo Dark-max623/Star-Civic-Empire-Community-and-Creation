@@ -8,13 +8,12 @@ interface AuthContextValue {
   logout: () => void;
 }
 
-const AUTH_KEY = 'ravana_admin_session';
+const AUTH_KEY = 'sce_admin_session';
 
-// Mock credentials — replace with real API later
 const MOCK_ADMIN = {
-  email: 'admin@ravana.com',
-  password: 'ravana2025',
-  name: 'Ravana Admin',
+  email: 'admin@starcivic.com',
+  password: 'starcivic2025',
+  name: 'Star Civic Admin',
   role: 'admin' as const,
 };
 
@@ -35,7 +34,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (email: string, password: string) => {
-    if (email.trim().toLowerCase() === MOCK_ADMIN.email && password === MOCK_ADMIN.password) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (
+      normalizedEmail === MOCK_ADMIN.email &&
+      password === MOCK_ADMIN.password
+    ) {
       const admin: AdminUser = {
         email: MOCK_ADMIN.email,
         name: MOCK_ADMIN.name,
@@ -45,6 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem(AUTH_KEY, JSON.stringify(admin));
       return { ok: true };
     }
+
     return { ok: false, error: 'Invalid email or password.' };
   };
 
@@ -54,9 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, login, logout }}
-    >
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
