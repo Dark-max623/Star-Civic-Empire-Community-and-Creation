@@ -1,6 +1,6 @@
 import { useRef, useState, type DragEvent, type ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { compressImage, formatBytes } from '../../utils/imageUpload';
+import { compressImage } from '../../utils/imageUpload';
 
 export interface UploadedImage {
   url: string;
