@@ -2,31 +2,31 @@ import type { Feature } from '../types';
 
 export const features: Feature[] = [
   {
-    id: 'expertise',
-    icon: '⚙️',
-    title: 'Unmatched Expertise',
+    id: 'talent',
+    icon: '✨',
+    title: 'Nurturing Talent',
     description:
-      'Years of experience crafting extraordinary events and experiences across the UK and beyond.',
+      'Every individual has unique potential worth nurturing. We create the space for talent to be discovered, developed, and celebrated.',
   },
   {
-    id: 'innovation',
-    icon: '💡',
-    title: 'Innovative Approach',
+    id: 'creativity',
+    icon: '🎨',
+    title: 'Championing Creativity',
     description:
-      'We blend creativity with cutting-edge design to deliver moments that feel truly one of a kind.',
+      'We believe creativity transforms lives. Our platforms give artists, designers, and performers room to express and grow.',
   },
   {
-    id: 'commitment',
+    id: 'opportunity',
+    icon: '🚀',
+    title: 'Creating Opportunities',
+    description:
+      'Real doors, real stages, real pathways. We connect people to opportunities that turn potential into progress.',
+  },
+  {
+    id: 'community',
     icon: '🤝',
-    title: 'Client Commitment',
+    title: 'Empowering Communities',
     description:
-      'Your vision is our blueprint. We work hand-in-hand to ensure every detail exceeds expectation.',
-  },
-  {
-    id: 'reach',
-    icon: '🌍',
-    title: 'Global Reach',
-    description:
-      'A vast network of partners and venues lets us bring world-class experiences to any stage.',
+      'Stronger together. Our initiatives unite people through shared culture, collaboration, and meaningful engagement.',
   },
 ];

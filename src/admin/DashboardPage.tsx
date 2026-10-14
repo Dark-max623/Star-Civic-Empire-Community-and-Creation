@@ -1,22 +1,75 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useData } from '../context/DataContext';
-import { formatBytes, STORAGE_WARN_BYTES } from '../utils/imageUpload';
+import { adminApi, type DashboardStats } from '../api';
 
 export const DashboardPage = () => {
-  const { gallery, reviews, events, storageUsedBytes } = useData();
-  const pendingReviews = reviews.filter((r) => r.status === 'pending').length;
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const stats = [
-    { label: 'Gallery Photos', value: gallery.length, to: '/admin/gallery', color: 'text-gold-primary' },
-    { label: 'Total Reviews', value: reviews.length, to: '/admin/reviews', color: 'text-gold-primary' },
-    { label: 'Pending Reviews', value: pendingReviews, to: '/admin/reviews', color: 'text-red-400' },
-    { label: 'Upcoming Events', value: events.length, to: '/admin/events', color: 'text-gold-primary' },
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await adminApi.stats();
+        setStats(data);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="p-6 md:p-10">
+        <p className="text-text-subtle text-sm">Loading dashboard…</p>
+      </div>
+    );
+  }
+
+  const cards = [
+    {
+      label: 'Gallery Photos',
+      value: stats?.gallery_count ?? 0,
+      to: '/admin/gallery',
+      color: 'text-gold-primary',
+    },
+    {
+      label: 'Total Reviews',
+      value: stats?.reviews_total ?? 0,
+      to: '/admin/reviews',
+      color: 'text-gold-primary',
+    },
+    {
+      label: 'Pending Reviews',
+      value: stats?.reviews_pending ?? 0,
+      to: '/admin/reviews',
+      color: 'text-yellow-400',
+    },
+    {
+      label: 'Upcoming Events',
+      value: stats?.events_count ?? 0,
+      to: '/admin/events',
+      color: 'text-gold-primary',
+    },
+    {
+      label: 'Services',
+      value: stats?.services_count ?? 0,
+      to: '/admin/services',
+      color: 'text-gold-primary',
+    },
+    {
+      label: 'Unread Messages',
+      value: stats?.unread_messages ?? 0,
+      to: '/admin/messages',
+      color: 'text-red-400',
+    },
+    {
+      label: 'Subscribers',
+      value: stats?.subscribers_count ?? 0,
+      to: '/admin/subscribers',
+      color: 'text-gold-primary',
+    },
   ];
-
-  const usagePercent = Math.min(
-    100,
-    Math.round((storageUsedBytes / STORAGE_WARN_BYTES) * 100)
-  );
 
   return (
     <div className="p-6 md:p-10">
@@ -25,12 +78,12 @@ export const DashboardPage = () => {
           Dashboard
         </h1>
         <p className="text-text-subtle text-sm">
-          Welcome back. Here's an overview of your website.
+          Welcome back. Here's an overview of your Star Civic Empire website.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {stats.map((stat) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        {cards.map((stat) => (
           <Link
             key={stat.label}
             to={stat.to}
@@ -42,38 +95,6 @@ export const DashboardPage = () => {
             <p className={`text-4xl font-bold ${stat.color}`}>{stat.value}</p>
           </Link>
         ))}
-      </div>
-
-      {/* Storage Card */}
-      <div className="mt-6 bg-bg-dark-elevated border border-white/5 rounded-sm p-6">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-text-subtle text-xs uppercase tracking-widest">
-              Storage Used
-            </p>
-            <p className="text-text-primary text-2xl font-bold mt-1">
-              {formatBytes(storageUsedBytes)}
-              <span className="text-text-muted text-sm font-normal">
-                {' '}/ {formatBytes(STORAGE_WARN_BYTES)}
-              </span>
-            </p>
-          </div>
-          <span className="text-gold-primary text-2xl font-bold">
-            {usagePercent}%
-          </span>
-        </div>
-        <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all ${
-              usagePercent > 85
-                ? 'bg-red-500'
-                : usagePercent > 60
-                ? 'bg-yellow-500'
-                : 'bg-gold-primary'
-            }`}
-            style={{ width: `${usagePercent}%` }}
-          />
-        </div>
       </div>
 
       <div className="mt-12">
@@ -98,6 +119,12 @@ export const DashboardPage = () => {
             className="border border-gold-primary text-gold-primary text-sm font-semibold uppercase tracking-widest px-5 py-3 rounded-sm hover:bg-gold-primary hover:text-bg-dark transition-colors"
           >
             + Add Event
+          </Link>
+          <Link
+            to="/admin/messages"
+            className="border border-gold-primary text-gold-primary text-sm font-semibold uppercase tracking-widest px-5 py-3 rounded-sm hover:bg-gold-primary hover:text-bg-dark transition-colors"
+          >
+            Inbox
           </Link>
         </div>
       </div>

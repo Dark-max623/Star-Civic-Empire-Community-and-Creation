@@ -1,8 +1,8 @@
 import type { Value } from '../types';
 
 export const values: Value[] = [
-  { id: 'excellence', label: 'Excellence' },
-  { id: 'innovation', label: 'Innovation' },
-  { id: 'integrity', label: 'Integrity' },
-  { id: 'community', label: 'Community' },
+  { id: 'talent', label: 'Talent Development' },
+  { id: 'creativity', label: 'Creative Expression' },
+  { id: 'community', label: 'Community Empowerment' },
+  { id: 'opportunity', label: 'Opportunity Creation' },
 ];

@@ -6,7 +6,11 @@ export const WhyUs = () => {
   return (
     <section className="section-padding bg-bg-dark-elevated">
       <div className="section-container">
-        <SectionHeader subtitle="What Sets Us Apart" title="Why Star Civic Group" align="center" />
+        <SectionHeader
+          subtitle="What Sets Us Apart"
+          title="Why Star Civic Empire"
+          align="center"
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
           {features.map((feature, i) => (

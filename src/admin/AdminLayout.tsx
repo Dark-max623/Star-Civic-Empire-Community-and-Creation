@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const links = [
@@ -6,31 +7,42 @@ const links = [
   { to: '/admin/gallery', label: 'Gallery', icon: '▣' },
   { to: '/admin/reviews', label: 'Reviews', icon: '✦' },
   { to: '/admin/events', label: 'Events', icon: '◈' },
+  { to: '/admin/services', label: 'Services', icon: '❖' },
+  { to: '/admin/messages', label: 'Messages', icon: '✉' },
+  { to: '/admin/subscribers', label: 'Subscribers', icon: '☰' },
 ];
 
 export const AdminLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      navigate('/');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-bg-dark flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-bg-dark-elevated border-r border-white/5 flex flex-col">
+    <div className="h-screen w-screen overflow-hidden bg-bg-dark flex">
+      <aside className="w-64 h-screen shrink-0 bg-bg-dark-elevated border-r border-white/5 flex flex-col">
         <div className="px-6 py-6 border-b border-white/5">
           <div className="flex items-center gap-2">
-            <span className="text-gold-primary font-extrabold text-lg">Star Civic</span>
+            <span className="text-gold-primary font-extrabold text-lg">
+              Star Civic
+            </span>
             <span className="text-text-primary text-[10px] tracking-widest">
               ADMIN
             </span>
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-6 flex flex-col gap-1">
+        <nav className="flex-1 px-3 py-6 flex flex-col gap-1 overflow-y-auto">
           {links.map((link) => (
             <NavLink
               key={link.to}
@@ -55,18 +67,21 @@ export const AdminLayout = () => {
             <div className="text-text-primary font-medium truncate">
               {user?.email}
             </div>
+            <div className="text-gold-primary text-[10px] uppercase tracking-widest mt-1">
+              {user?.role}
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            className="text-xs uppercase tracking-widest text-gold-primary border border-gold-primary rounded-sm py-2 hover:bg-gold-primary hover:text-bg-dark transition-colors"
+            disabled={isLoggingOut}
+            className="text-xs uppercase tracking-widest text-gold-primary border border-gold-primary rounded-sm py-2 hover:bg-gold-primary hover:text-bg-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Logout
+            {isLoggingOut ? 'Logging out…' : 'Logout'}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 h-screen overflow-y-auto">
         <Outlet />
       </main>
     </div>

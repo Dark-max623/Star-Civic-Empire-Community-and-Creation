@@ -7,6 +7,7 @@ export interface NavLink {
 export interface Service {
   id: string;
   title: string;
+  slug: string;
   tagline: string;
   description: string;
   imageUrl: string;
@@ -29,6 +30,8 @@ export interface Event {
   id: string;
   title: string;
   date: string;
+  startTime?: string;
+  endTime?: string;
   location: string;
   imageUrl: string;
   ctaLabel: string;
@@ -45,8 +48,6 @@ export interface SocialLink {
   icon: string;
 }
 
-/* ============ NEW ============ */
-
 export interface GalleryImage {
   id: string;
   url: string;
@@ -59,7 +60,7 @@ export interface Review {
   name: string;
   email: string;
   message: string;
-  rating: number;       // 1-5
+  rating: number;
   status: 'pending' | 'approved';
   createdAt: number;
 }

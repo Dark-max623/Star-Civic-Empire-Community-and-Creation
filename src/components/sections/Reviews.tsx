@@ -1,28 +1,41 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { useData } from '../../context/DataContext';
 import { SectionHeader } from '../ui/SectionHeader';
 import { Button } from '../ui/Button';
 
 export const Reviews = () => {
-  const { reviews, addReview } = useData();
-  const approved = reviews.filter((r) => r.status === 'approved');
+  const { publicReviews, refreshPublicReviews, submitReview } = useData();
 
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    message: '',
-    rating: 5,
-  });
-  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', message: '', rating: 5 });
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'ok' | 'err'>('idle');
+  const [feedback, setFeedback] = useState('');
 
-  const handleSubmit = (e: FormEvent) => {
+  const fetched = useRef(false);
+
+  useEffect(() => {
+    if (fetched.current) return;
+    fetched.current = true;
+    refreshPublicReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) return;
-    addReview(form);
-    setForm({ name: '', email: '', message: '', rating: 5 });
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
+
+    setStatus('submitting');
+    const result = await submitReview(form);
+
+    if (result.ok) {
+      setStatus('ok');
+      setFeedback('Thank you! Your review is awaiting approval.');
+      setForm({ name: '', email: '', message: '', rating: 5 });
+    } else {
+      setStatus('err');
+      setFeedback(result.error || 'Submission failed.');
+    }
+    setTimeout(() => setStatus('idle'), 4000);
   };
 
   return (
@@ -34,16 +47,15 @@ export const Reviews = () => {
           align="center"
         />
 
-        {/* Approved Reviews Grid */}
-        {approved.length > 0 && (
+        {publicReviews.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-14">
-            {approved.slice(0, 6).map((review) => (
+            {publicReviews.slice(0, 6).map((review) => (
               <motion.div
                 key={review.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
+                viewport={{ once: true, amount: 0.1 }}
+                transition={{ duration: 0.35 }}
                 className="bg-bg-dark-elevated border border-white/5 rounded-sm p-6 flex flex-col gap-3"
               >
                 <span className="text-gold-primary text-sm">
@@ -63,13 +75,12 @@ export const Reviews = () => {
           </div>
         )}
 
-        {/* Submit Form */}
         <motion.form
           onSubmit={handleSubmit}
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.35 }}
           className="max-w-2xl mx-auto bg-bg-dark-elevated border border-white/5 rounded-sm p-6 md:p-8 flex flex-col gap-5"
         >
           <h3 className="text-text-primary text-xl font-semibold text-center">
@@ -95,7 +106,6 @@ export const Reviews = () => {
             />
           </div>
 
-          {/* Rating */}
           <div className="flex items-center gap-2">
             <span className="text-text-subtle text-xs uppercase tracking-widest mr-2">
               Rating:
@@ -123,14 +133,28 @@ export const Reviews = () => {
             className="bg-transparent border border-text-muted rounded-sm px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-gold-primary transition-colors resize-none"
           />
 
-          {submitted && (
-            <p className="text-green-400 text-sm text-center bg-green-500/10 border border-green-500/30 py-2 rounded-sm">
-              Thank you! Your review is awaiting approval.
+          {status !== 'idle' && (
+            <p
+              className={`text-sm text-center py-2 rounded-sm border ${
+                status === 'ok'
+                  ? 'text-green-400 bg-green-500/10 border-green-500/30'
+                  : status === 'err'
+                  ? 'text-red-400 bg-red-500/10 border-red-500/30'
+                  : 'text-text-subtle bg-white/5 border-white/10'
+              }`}
+            >
+              {status === 'submitting' ? 'Submitting…' : feedback}
             </p>
           )}
 
-          <Button variant="solid" size="lg" type="submit" className="self-center">
-            Submit Review
+          <Button
+            variant="solid"
+            size="lg"
+            type="submit"
+            className="self-center"
+            disabled={status === 'submitting'}
+          >
+            {status === 'submitting' ? 'Submitting…' : 'Submit Review'}
           </Button>
         </motion.form>
       </div>

@@ -1,215 +1,355 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
-import type { GalleryImage, Review, Event } from '../types';
-import { galleryImages as initialGallery } from '../data/gallery';
-import { events as initialEvents } from '../data/events';
+import {
+  galleryApi,
+  reviewsApi,
+  eventsApi,
+  servicesApi,
+  getErrorMessage,
+} from '../api';
+import type {
+  ApiAdminReview,
+  ApiEvent,
+  ApiGalleryImage,
+  ApiReview,
+  ApiService,
+} from '../api';
 
 interface DataContextValue {
-  gallery: GalleryImage[];
-  reviews: Review[];
-  events: Event[];
+  gallery: ApiGalleryImage[];
+  galleryTotal: number;
+  galleryHasMore: boolean;
+  isLoadingGallery: boolean;
+  refreshGallery: () => Promise<void>;
+  loadMoreGallery: () => Promise<void>;
+  uploadGalleryImages: (
+    files: { file: File; alt: string }[]
+  ) => Promise<{ ok: boolean; error?: string }>;
+  deleteGalleryImage: (id: string) => Promise<void>;
 
-  // Gallery
-  addGalleryImages: (images: { url: string; alt: string }[]) => { ok: boolean; error?: string };
-  deleteGalleryImage: (id: string) => void;
+  reviews: ApiAdminReview[];
+  reviewsTotal: number;
+  reviewsHasMore: boolean;
+  isLoadingReviews: boolean;
+  refreshReviews: () => Promise<void>;
+  loadMoreReviews: () => Promise<void>;
+  approveReview: (id: string) => Promise<void>;
+  deleteReview: (id: string) => Promise<void>;
 
-  // Reviews
-  addReview: (review: Omit<Review, 'id' | 'status' | 'createdAt'>) => void;
-  approveReview: (id: string) => void;
-  deleteReview: (id: string) => void;
+  publicReviews: ApiReview[];
+  refreshPublicReviews: () => Promise<void>;
+  submitReview: (payload: {
+    name: string;
+    email: string;
+    message: string;
+    rating: number;
+  }) => Promise<{ ok: boolean; error?: string }>;
 
-  // Events
-  addEvent: (event: Omit<Event, 'id'>) => { ok: boolean; error?: string };
-  deleteEvent: (id: string) => void;
+  events: ApiEvent[];
+  eventsTotal: number;
+  eventsHasMore: boolean;
+  isLoadingEvents: boolean;
+  refreshEvents: () => Promise<void>;
+  loadMoreEvents: () => Promise<void>;
+  createEvent: (payload: {
+    title: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    location: string;
+    ctaLabel: string;
+    image: File;
+  }) => Promise<{ ok: boolean; error?: string }>;
+  deleteEvent: (id: string) => Promise<void>;
 
-  // Diagnostics
-  storageUsedBytes: number;
+  services: ApiService[];
+  isLoadingServices: boolean;
+  refreshServices: () => Promise<void>;
+  createService: (payload: {
+    title: string;
+    tagline: string;
+    description: string;
+    ctaLabel: string;
+    order: number;
+    image: File;
+  }) => Promise<{ ok: boolean; error?: string }>;
+  deleteService: (slug: string) => Promise<void>;
 }
-
-const GALLERY_KEY = 'ravana_gallery_v2';
-const REVIEWS_KEY = 'ravana_reviews_v2';
-const EVENTS_KEY = 'ravana_events_v2';
-const STORAGE_WARN = 4 * 1024 * 1024;
 
 const DataContext = createContext<DataContextValue | undefined>(undefined);
 
-const seedGallery: GalleryImage[] = initialGallery.map((g, i) => ({
-  id: g.id,
-  url: g.url,
-  alt: g.alt,
-  createdAt: Date.now() - i * 1000,
-}));
-
-const seedReviews: Review[] = [
-  {
-    id: 'r1',
-    name: 'Amelia Hart',
-    email: 'amelia@example.com',
-    message:
-      'Ravana Events made our wedding absolutely magical. Every detail was flawless!',
-    rating: 5,
-    status: 'approved',
-    createdAt: Date.now() - 86400000 * 3,
-  },
-  {
-    id: 'r2',
-    name: 'James Okafor',
-    email: 'james@example.com',
-    message:
-      'The banquet team exceeded all expectations. Our corporate gala was unforgettable.',
-    rating: 5,
-    status: 'pending',
-    createdAt: Date.now() - 86400000,
-  },
-];
-
-function loadOrSeed<T>(key: string, seed: T[]): T[] {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
-  } catch {
-    /* noop */
-  }
-  return seed;
-}
-
-function approxStorageSize(): number {
-  let total = 0;
-  for (const key of [GALLERY_KEY, REVIEWS_KEY, EVENTS_KEY]) {
-    const val = localStorage.getItem(key);
-    if (val) total += val.length * 2; // rough UTF-16 estimate
-  }
-  return total;
-}
+const GALLERY_PAGE_SIZE = 12;
+const EVENTS_PAGE_SIZE = 10;
+const REVIEWS_PAGE_SIZE = 15;
 
 export const DataProvider = ({ children }: { children: ReactNode }) => {
-  const [gallery, setGallery] = useState<GalleryImage[]>(() =>
-    loadOrSeed(GALLERY_KEY, seedGallery)
-  );
-  const [reviews, setReviews] = useState<Review[]>(() =>
-    loadOrSeed(REVIEWS_KEY, seedReviews)
-  );
-  const [events, setEvents] = useState<Event[]>(() =>
-    loadOrSeed(EVENTS_KEY, initialEvents)
-  );
-  const [storageUsedBytes, setStorageUsedBytes] = useState(approxStorageSize());
+  const [gallery, setGallery] = useState<ApiGalleryImage[]>([]);
+  const [galleryTotal, setGalleryTotal] = useState(0);
+  const [galleryPage, setGalleryPage] = useState(1);
+  const [galleryHasMore, setGalleryHasMore] = useState(false);
+  const [isLoadingGallery, setIsLoadingGallery] = useState(true);
 
-  useEffect(() => {
+  const [reviews, setReviews] = useState<ApiAdminReview[]>([]);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsHasMore, setReviewsHasMore] = useState(false);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+
+  const [publicReviews, setPublicReviews] = useState<ApiReview[]>([]);
+
+  const [events, setEvents] = useState<ApiEvent[]>([]);
+  const [eventsTotal, setEventsTotal] = useState(0);
+  const [eventsPage, setEventsPage] = useState(1);
+  const [eventsHasMore, setEventsHasMore] = useState(false);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+
+  const [services, setServices] = useState<ApiService[]>([]);
+  const [isLoadingServices, setIsLoadingServices] = useState(true);
+
+  const bootstrapped = useRef(false);
+
+  // ---------- Gallery ----------
+  const refreshGallery = useCallback(async () => {
+    setIsLoadingGallery(true);
     try {
-      localStorage.setItem(GALLERY_KEY, JSON.stringify(gallery));
-      setStorageUsedBytes(approxStorageSize());
-    } catch (err) {
-      console.error('Failed to persist gallery:', err);
+      const data = await galleryApi.list(1, GALLERY_PAGE_SIZE);
+      setGallery(data.results);
+      setGalleryTotal(data.count);
+      setGalleryPage(1);
+      setGalleryHasMore(!!data.next);
+    } finally {
+      setIsLoadingGallery(false);
     }
-  }, [gallery]);
+  }, []);
 
-  useEffect(() => {
+  const loadMoreGallery = useCallback(async () => {
+    if (!galleryHasMore || isLoadingGallery) return;
+    setIsLoadingGallery(true);
     try {
-      localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
-      setStorageUsedBytes(approxStorageSize());
-    } catch (err) {
-      console.error('Failed to persist reviews:', err);
+      const nextPage = galleryPage + 1;
+      const data = await galleryApi.list(nextPage, GALLERY_PAGE_SIZE);
+      setGallery((prev) => [...prev, ...data.results]);
+      setGalleryPage(nextPage);
+      setGalleryHasMore(!!data.next);
+    } finally {
+      setIsLoadingGallery(false);
     }
-  }, [reviews]);
+  }, [galleryHasMore, galleryPage, isLoadingGallery]);
 
-  useEffect(() => {
+  const uploadGalleryImages = async (
+    items: { file: File; alt: string }[]
+  ): Promise<{ ok: boolean; error?: string }> => {
     try {
-      localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
-      setStorageUsedBytes(approxStorageSize());
+      const uploaded: ApiGalleryImage[] = [];
+      for (const item of items) {
+        const img = await galleryApi.upload(item.file, item.alt);
+        uploaded.push(img);
+      }
+      setGallery((prev) => [...uploaded, ...prev]);
+      setGalleryTotal((prev) => prev + uploaded.length);
+      return { ok: true };
     } catch (err) {
-      console.error('Failed to persist events:', err);
+      return { ok: false, error: getErrorMessage(err) };
     }
-  }, [events]);
-
-  const addGalleryImages = (
-    images: { url: string; alt: string }[]
-  ): { ok: boolean; error?: string } => {
-    if (images.length === 0) return { ok: false, error: 'No images provided.' };
-
-    // Estimate new total
-    const addedBytes = images.reduce(
-      (sum, img) => sum + img.url.length * 2,
-      0
-    );
-
-    if (storageUsedBytes + addedBytes > STORAGE_WARN) {
-      return {
-        ok: false,
-        error:
-          'Storage is nearly full. Delete some existing photos before uploading more.',
-      };
-    }
-
-    const newImages: GalleryImage[] = images.map((img, i) => ({
-      id: `g-${Date.now()}-${i}`,
-      url: img.url,
-      alt: img.alt || 'Gallery image',
-      createdAt: Date.now() - i,
-    }));
-
-    setGallery((prev) => [...newImages, ...prev]);
-    return { ok: true };
   };
 
-  const deleteGalleryImage = (id: string) => {
+  const deleteGalleryImage = async (id: string) => {
+    await galleryApi.remove(id);
     setGallery((prev) => prev.filter((g) => g.id !== id));
+    setGalleryTotal((prev) => Math.max(0, prev - 1));
   };
 
-  const addReview = (review: Omit<Review, 'id' | 'status' | 'createdAt'>) => {
-    const newReview: Review = {
-      ...review,
-      id: `r-${Date.now()}`,
-      status: 'pending',
-      createdAt: Date.now(),
-    };
-    setReviews((prev) => [newReview, ...prev]);
-  };
-
-  const approveReview = (id: string) => {
-    setReviews((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: 'approved' } : r))
-    );
-  };
-
-  const deleteReview = (id: string) => {
-    setReviews((prev) => prev.filter((r) => r.id !== id));
-  };
-
-  const addEvent = (event: Omit<Event, 'id'>): { ok: boolean; error?: string } => {
-    const addedBytes = event.imageUrl.length * 2;
-    if (storageUsedBytes + addedBytes > STORAGE_WARN) {
-      return {
-        ok: false,
-        error: 'Storage is nearly full. Delete some events before adding more.',
-      };
+  // ---------- Reviews ----------
+  const refreshReviews = useCallback(async () => {
+    setIsLoadingReviews(true);
+    try {
+      const data = await reviewsApi.listAll(1, REVIEWS_PAGE_SIZE);
+      setReviews(data.results);
+      setReviewsTotal(data.count);
+      setReviewsPage(1);
+      setReviewsHasMore(!!data.next);
+    } finally {
+      setIsLoadingReviews(false);
     }
-    setEvents((prev) => [{ ...event, id: `e-${Date.now()}` }, ...prev]);
-    return { ok: true };
+  }, []);
+
+  const loadMoreReviews = useCallback(async () => {
+    if (!reviewsHasMore || isLoadingReviews) return;
+    setIsLoadingReviews(true);
+    try {
+      const nextPage = reviewsPage + 1;
+      const data = await reviewsApi.listAll(nextPage, REVIEWS_PAGE_SIZE);
+      setReviews((prev) => [...prev, ...data.results]);
+      setReviewsPage(nextPage);
+      setReviewsHasMore(!!data.next);
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  }, [reviewsHasMore, reviewsPage, isLoadingReviews]);
+
+  const refreshPublicReviews = useCallback(async () => {
+    const data = await reviewsApi.listPublic(1, 15);
+    setPublicReviews(data.results);
+  }, []);
+
+  const submitReview = async (payload: {
+    name: string;
+    email: string;
+    message: string;
+    rating: number;
+  }): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      await reviewsApi.submit(payload);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: getErrorMessage(err) };
+    }
   };
 
-  const deleteEvent = (id: string) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
+  const approveReview = async (id: string) => {
+    const updated = await reviewsApi.approve(id);
+    setReviews((prev) => prev.map((r) => (r.id === id ? updated : r)));
+    await refreshPublicReviews();
   };
+
+  const deleteReview = async (id: string) => {
+    await reviewsApi.remove(id);
+    setReviews((prev) => prev.filter((r) => r.id !== id));
+    setReviewsTotal((prev) => Math.max(0, prev - 1));
+  };
+
+  // ---------- Events ----------
+  const refreshEvents = useCallback(async () => {
+    setIsLoadingEvents(true);
+    try {
+      const data = await eventsApi.list(1, EVENTS_PAGE_SIZE);
+      setEvents(data.results);
+      setEventsTotal(data.count);
+      setEventsPage(1);
+      setEventsHasMore(!!data.next);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  }, []);
+
+  const loadMoreEvents = useCallback(async () => {
+    if (!eventsHasMore || isLoadingEvents) return;
+    setIsLoadingEvents(true);
+    try {
+      const nextPage = eventsPage + 1;
+      const data = await eventsApi.list(nextPage, EVENTS_PAGE_SIZE);
+      setEvents((prev) => [...prev, ...data.results]);
+      setEventsPage(nextPage);
+      setEventsHasMore(!!data.next);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  }, [eventsHasMore, eventsPage, isLoadingEvents]);
+
+  const createEvent = async (payload: {
+    title: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    location: string;
+    ctaLabel: string;
+    image: File;
+  }): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const created = await eventsApi.create(payload);
+      setEvents((prev) => [created, ...prev]);
+      setEventsTotal((prev) => prev + 1);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: getErrorMessage(err) };
+    }
+  };
+
+  const deleteEvent = async (id: string) => {
+    await eventsApi.remove(id);
+    setEvents((prev) => prev.filter((e) => e.id !== id));
+    setEventsTotal((prev) => Math.max(0, prev - 1));
+  };
+
+  // ---------- Services ----------
+  const refreshServices = useCallback(async () => {
+    setIsLoadingServices(true);
+    try {
+      const data = await servicesApi.list();
+      setServices(data);
+    } finally {
+      setIsLoadingServices(false);
+    }
+  }, []);
+
+  const createService = async (payload: {
+    title: string;
+    tagline: string;
+    description: string;
+    ctaLabel: string;
+    order: number;
+    image: File;
+  }): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const created = await servicesApi.create(payload);
+      setServices((prev) =>
+        [...prev, created].sort((a, b) => a.order - b.order)
+      );
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: getErrorMessage(err) };
+    }
+  };
+
+  const deleteService = async (slug: string) => {
+    await servicesApi.remove(slug);
+    setServices((prev) => prev.filter((s) => s.slug !== slug));
+  };
+
+  // ---------- Bootstrap (parallel, runs once) ----------
+  useEffect(() => {
+    if (bootstrapped.current) return;
+    bootstrapped.current = true;
+
+    const bootstrap = async () => {
+      try {
+        await Promise.all([
+          refreshGallery(),
+          refreshEvents(),
+          refreshServices(),
+          refreshPublicReviews(),
+        ]);
+      } catch (err) {
+        console.error('Bootstrap failed:', err);
+      }
+    };
+
+    bootstrap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <DataContext.Provider
       value={{
-        gallery,
-        reviews,
-        events,
-        addGalleryImages,
-        deleteGalleryImage,
-        addReview,
-        approveReview,
-        deleteReview,
-        addEvent,
-        deleteEvent,
-        storageUsedBytes,
+        gallery, galleryTotal, galleryHasMore, isLoadingGallery,
+        refreshGallery, loadMoreGallery, uploadGalleryImages, deleteGalleryImage,
+
+        reviews, reviewsTotal, reviewsHasMore, isLoadingReviews,
+        refreshReviews, loadMoreReviews, approveReview, deleteReview,
+
+        publicReviews, refreshPublicReviews, submitReview,
+
+        events, eventsTotal, eventsHasMore, isLoadingEvents,
+        refreshEvents, loadMoreEvents, createEvent, deleteEvent,
+
+        services, isLoadingServices, refreshServices, createService, deleteService,
       }}
     >
       {children}

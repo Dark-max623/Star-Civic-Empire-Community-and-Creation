@@ -13,14 +13,15 @@ export const SectionHeader = ({
   align = 'left',
   className = '',
 }: SectionHeaderProps) => {
-  const alignClass = align === 'center' ? 'text-center items-center' : 'text-left items-start';
+  const alignClass =
+    align === 'center' ? 'text-center items-center' : 'text-left items-start';
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
       className={`flex flex-col ${alignClass} gap-3 mb-10 md:mb-14 ${className}`}
     >
       {subtitle && <span className="text-subtitle">{subtitle}</span>}

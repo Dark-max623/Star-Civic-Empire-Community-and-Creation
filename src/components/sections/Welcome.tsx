@@ -1,35 +1,35 @@
 import { motion } from 'framer-motion';
 import { values } from '../../data/values';
 import { ValueItem } from '../ui/ValueItem';
+import welcomeImage from '../../assets/images/MR.T.jpg';
 
 export const Welcome = () => {
   return (
     <section id="about" className="section-padding bg-bg-dark">
       <div className="section-container grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Left: Text */}
         <motion.div
-          initial={{ opacity: 0, x: -30 }}
+          initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.7 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.4 }}
           className="flex flex-col gap-6"
         >
-          <h2 className="text-section-title">Welcome to Star Civic Empire Group</h2>
+          <h2 className="text-section-title">About Star Civic Empire</h2>
 
           <p className="text-gold-primary text-sm md:text-base font-medium italic">
-            Unleash the Extraordinary. Embrace the Exceptional.
+            Community &amp; Creation
           </p>
 
           <p className="text-text-subtle text-sm md:text-base leading-relaxed">
-            Welcome to Star Civic Empire Group, where we redefine entertainment, elevate taste, and
-            give back to the community. With a commitment to excellence, innovation, and
-            social responsibility, we invite you to explore the myriad facets of what we do.
+            Star Civic Empire Community &amp; Creation is a community-driven
+            organization dedicated to empowering individuals, nurturing talent,
+            promoting creativity, and creating opportunities for growth and
+            development.
           </p>
 
           <p className="text-text-subtle text-sm md:text-base leading-relaxed">
-            Established in 2021, Star Civic Empire Group has evolved into a prominent entity in the Kenya,
-            encompassing four distinct yet interconnected businesses. Our journey is marked
-            by a dedication to redefining entertainment, lifestyle, and community engagement.
+            We bring people together through entertainment, fashion, modelling,
+            cultural events, talent development, and community initiatives.
           </p>
 
           <div className="flex flex-col gap-3 pt-2">
@@ -42,19 +42,19 @@ export const Welcome = () => {
           </div>
         </motion.div>
 
-        {/* Right: Image */}
         <motion.div
-          initial={{ opacity: 0, x: 30 }}
+          initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.7 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.4 }}
           className="relative"
         >
           <div className="aspect-square overflow-hidden rounded-sm">
             <img
-              src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1000&q=85"
-              alt="Concert lights"
+              src={welcomeImage}
+              alt="Star Civic Empire community"
               loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           </div>

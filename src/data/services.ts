@@ -2,41 +2,41 @@ import type { Service } from '../types';
 
 export const services: Service[] = [
   {
-    id: 'events',
-    title: 'Star Civic Empire Events',
-    tagline: 'Moments Redefined',
+    id: 'entertainment',
+    title: 'Star Civic Entertainment',
+    tagline: 'Moments That Matter',
     description:
-      'Star Civic Empire Events presents a world of unforgettable experiences with grand events, from enchanting concerts to exquisite extravaganzas, we curate events that redefine entertainment.',
+      'From cultural showcases to community concerts, we create events that celebrate talent and bring people together. Every production is a platform for emerging artists and performers.',
     imageUrl:
       'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=800&q=80',
     ctaLabel: 'Discover More',
   },
   {
-    id: 'banquet',
-    title: 'Star Civic Empire Banquet',
-    tagline: 'Culinary Elegance',
+    id: 'fashion',
+    title: 'Star Civic Fashion & Modelling',
+    tagline: 'Style With Purpose',
     description:
-      'Elevate your celebrations at Ravana Banquet. Our exquisite venue is designed to host weddings, corporate events, and social gatherings. Indulge in culinary delights.',
-    imageUrl:
-      'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=800&q=80',
-    ctaLabel: 'Discover More',
-  },
-  {
-    id: 'fashions',
-    title: 'Star Civic Fashions',
-    tagline: 'Style Redefined',
-    description:
-      'Explore Star Civic Empire Fashions, where every product is a testament to quality and style. From fabric to fashion, our curated collections redefine luxury, step by step.',
+      'We nurture the next generation of models, designers, and stylists — providing runway opportunities, editorial shoots, and mentorship to build careers from the ground up.',
     imageUrl:
       'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
     ctaLabel: 'Discover More',
   },
   {
-    id: 'foundation',
-    title: 'Star Civic Foundation',
-    tagline: 'Empowering Futures',
+    id: 'talent',
+    title: 'Star Civic Talent Development',
+    tagline: 'Discover Your Potential',
     description:
-      'Make a positive impact with Star Civic Empire Foundation. Our philanthropic arm actively engages in initiatives supporting education, healthcare, and environmental sustainability.',
+      'Workshops, mentorship programs, and performance opportunities that help individuals build confidence, refine their craft, and turn their abilities into lasting careers.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80',
+    ctaLabel: 'Discover More',
+  },
+  {
+    id: 'community',
+    title: 'Star Civic Community Initiatives',
+    tagline: 'Strengthening Communities',
+    description:
+      'Outreach programs, cultural events, and social initiatives that create positive change — empowering young people and building stronger, more connected communities.',
     imageUrl:
       'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80',
     ctaLabel: 'Discover More',

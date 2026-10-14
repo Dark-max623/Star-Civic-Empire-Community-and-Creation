@@ -5,37 +5,57 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 
 export const LoginPage = () => {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Where to go after login (default = dashboard)
   const from =
     (location.state as { from?: { pathname: string } })?.from?.pathname ||
     '/admin/dashboard';
 
-  // Already logged in? Skip the page.
-  if (isAuthenticated) return <Navigate to="/admin/dashboard" replace />;
+  // If a session bootstrap is happening, show a spinner
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-bg-dark flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
+          <p className="text-text-subtle text-xs uppercase tracking-widest">
+            Loading…
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleSubmit = async (e: FormEvent) => {
+  // Already logged in? Skip login.
+  if (isAuthenticated) {
+    return <Navigate to={from} replace />;
+  }
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     setError('');
     setIsSubmitting(true);
 
-    // Small delay so the loading state is visible
-    await new Promise((r) => setTimeout(r, 300));
+    try {
+      const result = await login(email.trim().toLowerCase(), password);
 
-    const result = login(email, password);
-    setIsSubmitting(false);
-
-    if (result.ok) {
-      navigate(from, { replace: true });
-    } else {
-      setError(result.error || 'Login failed.');
+      if (result.ok) {
+        navigate(from, { replace: true });
+      } else {
+        setError(result.error || 'Login failed.');
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -47,7 +67,6 @@ export const LoginPage = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        {/* Back to home */}
         <Link
           to="/"
           className="inline-flex items-center gap-2 text-text-subtle text-xs uppercase tracking-widest hover:text-gold-primary transition-colors mb-8"
@@ -56,7 +75,6 @@ export const LoginPage = () => {
         </Link>
 
         <div className="bg-bg-dark-elevated rounded-sm p-8 md:p-10 border border-white/5">
-          {/* Brand */}
           <div className="flex items-center gap-2 mb-8 justify-center">
             <span className="text-gold-primary font-extrabold text-2xl tracking-tight">
               STAR CIVIC
@@ -67,10 +85,10 @@ export const LoginPage = () => {
           </div>
 
           <h1 className="text-text-primary text-2xl font-bold mb-2 text-center">
-            Admin Login
+            Login
           </h1>
           <p className="text-text-subtle text-sm text-center mb-8">
-            Sign in to manage the Star Civic Empire website
+            
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -86,10 +104,12 @@ export const LoginPage = () => {
                 type="email"
                 required
                 autoFocus
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-transparent border border-text-muted rounded-sm px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-gold-primary transition-colors"
-                placeholder="admin@starcivic.com"
+                placeholder="me@starcivic.com"
+                disabled={isSubmitting}
               />
             </div>
 
@@ -104,11 +124,23 @@ export const LoginPage = () => {
                 id="login-password"
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-transparent border border-text-muted rounded-sm px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-gold-primary transition-colors"
                 placeholder="••••••••"
+                disabled={isSubmitting}
               />
+            </div>
+
+            {/* Forgot password link */}
+            <div className="flex justify-end -mt-2">
+              <Link
+                to="/reset-password"
+                className="text-text-subtle text-xs hover:text-gold-primary transition-colors"
+              >
+                Forgot password?
+              </Link>
             </div>
 
             {error && (
@@ -130,11 +162,7 @@ export const LoginPage = () => {
 
           <div className="mt-8 pt-6 border-t border-white/5">
             <p className="text-text-muted text-xs text-center leading-relaxed">
-              Demo credentials
-              <br />
-              <span className="text-gold-primary">admin@starcivic.com</span>
-              {' / '}
-              <span className="text-gold-primary">starcivic2025</span>
+              Sign in with your Star Civic  credentials.
             </p>
           </div>
         </div>

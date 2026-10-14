@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink as RouterNavLink, useNavigate } from 'react-router-dom';
 import { navLinks } from '../../data/navLinks';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { useAuth } from '../../context/AuthContext';
@@ -14,16 +14,15 @@ export const Header = () => {
   const handleLoginClick = () => {
     setIsMenuOpen(false);
     if (isAuthenticated) {
-      // If already logged in, take them straight to the admin side
       navigate('/admin/dashboard');
     } else {
       navigate('/login');
     }
   };
 
-  const handleLogoutClick = () => {
+  const handleLogoutClick = async () => {
     setIsMenuOpen(false);
-    logout();
+    await logout();
     navigate('/');
   };
 
@@ -37,8 +36,8 @@ export const Header = () => {
     >
       <div className="section-container flex items-center justify-between h-16 md:h-20">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-gold-primary font-extrabold text-xl md:text-2xl tracking-tight">
+        <Link to="/" className="flex items-center gap-2 shrink-0 group">
+          <span className="text-gold-primary font-extrabold text-xl md:text-2xl tracking-tight transition-transform duration-300 group-hover:scale-105">
             STAR CIVIC
           </span>
           <span className="text-text-primary text-xs md:text-sm font-light tracking-widest">
@@ -47,35 +46,56 @@ export const Header = () => {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-10">
+        <nav className="hidden lg:flex items-center gap-8 xl:gap-10">
           {navLinks.map((link) => (
-            <a
+            <RouterNavLink
               key={link.label}
-              href={link.href}
-              className={`text-xs md:text-sm font-medium tracking-widest uppercase transition-colors duration-200 ${
-                link.isActive
-                  ? 'text-gold-primary'
-                  : 'text-text-primary hover:text-gold-primary'
-              }`}
+              to={link.href}
+              end={link.href === '/'}
+              className={({ isActive }) =>
+                `group relative text-xs md:text-sm font-medium tracking-widest uppercase transition-colors duration-300 ${
+                  isActive
+                    ? 'text-gold-primary'
+                    : 'text-text-primary hover:text-gold-primary'
+                }`
+              }
             >
-              {link.label}
-            </a>
+              {({ isActive }) => (
+                <>
+                  <span className="relative inline-block">
+                    {link.label}
+
+                    {/* Animated underline — always visible when active */}
+                    <motion.span
+                      className="absolute left-0 -bottom-1 h-[2px] bg-gold-primary"
+                      initial={false}
+                      animate={{
+                        width: isActive ? '100%' : '0%',
+                        opacity: isActive ? 1 : 0.7,
+                      }}
+                      whileHover={{ width: '100%' }}
+                      transition={{ duration: 0.3, ease: 'easeOut' }}
+                    />
+                  </span>
+                </>
+              )}
+            </RouterNavLink>
           ))}
         </nav>
 
-        {/* Right side: Login / Logout + Mobile toggle */}
+        {/* Right side */}
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <div className="hidden md:flex items-center gap-4">
               <button
                 onClick={handleLoginClick}
-                className="text-xs md:text-sm font-medium tracking-widest uppercase text-text-primary hover:text-gold-primary transition-colors"
+                className="text-xs md:text-sm font-medium tracking-widest uppercase text-text-primary hover:text-gold-primary transition-colors duration-300"
               >
                 Admin
               </button>
               <button
                 onClick={handleLogoutClick}
-                className="text-xs md:text-sm font-medium tracking-widest uppercase text-gold-primary border-b border-gold-primary pb-1 hover:text-gold-hover hover:border-gold-hover transition-colors"
+                className="text-xs md:text-sm font-medium tracking-widest uppercase text-gold-primary border-b border-gold-primary pb-1 hover:text-gold-hover hover:border-gold-hover transition-colors duration-300"
               >
                 Logout
               </button>
@@ -83,7 +103,7 @@ export const Header = () => {
           ) : (
             <button
               onClick={handleLoginClick}
-              className="hidden md:inline-block text-xs md:text-sm font-medium tracking-widest uppercase text-gold-primary border-b border-gold-primary pb-1 hover:text-gold-hover hover:border-gold-hover transition-colors"
+              className="hidden md:inline-block text-xs md:text-sm font-medium tracking-widest uppercase text-gold-primary border-b border-gold-primary pb-1 hover:text-gold-hover hover:border-gold-hover transition-colors duration-300"
             >
               Login
             </button>
@@ -95,17 +115,17 @@ export const Header = () => {
             className="lg:hidden flex flex-col gap-1.5 p-2"
           >
             <span
-              className={`block w-6 h-0.5 bg-gold-primary transition-transform ${
+              className={`block w-6 h-0.5 bg-gold-primary transition-transform duration-300 ${
                 isMenuOpen ? 'rotate-45 translate-y-2' : ''
               }`}
             />
             <span
-              className={`block w-6 h-0.5 bg-gold-primary transition-opacity ${
+              className={`block w-6 h-0.5 bg-gold-primary transition-opacity duration-300 ${
                 isMenuOpen ? 'opacity-0' : ''
               }`}
             />
             <span
-              className={`block w-6 h-0.5 bg-gold-primary transition-transform ${
+              className={`block w-6 h-0.5 bg-gold-primary transition-transform duration-300 ${
                 isMenuOpen ? '-rotate-45 -translate-y-2' : ''
               }`}
             />
@@ -120,21 +140,24 @@ export const Header = () => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="lg:hidden overflow-hidden bg-bg-dark border-t border-white/5"
           >
             <div className="section-container py-6 flex flex-col gap-5">
               {navLinks.map((link) => (
-                <a
+                <RouterNavLink
                   key={link.label}
-                  href={link.href}
+                  to={link.href}
+                  end={link.href === '/'}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`text-sm font-medium tracking-widest uppercase ${
-                    link.isActive ? 'text-gold-primary' : 'text-text-primary'
-                  }`}
+                  className={({ isActive }) =>
+                    `text-sm font-medium tracking-widest uppercase transition-colors duration-300 ${
+                      isActive ? 'text-gold-primary' : 'text-text-primary'
+                    }`
+                  }
                 >
                   {link.label}
-                </a>
+                </RouterNavLink>
               ))}
 
               {isAuthenticated ? (

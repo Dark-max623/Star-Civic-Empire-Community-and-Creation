@@ -1,65 +1,89 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { AdminUser } from '../types';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react';
+import { authApi, tokenStore, getErrorMessage } from '../api';
+import type { ApiUser } from '../api';
 
 interface AuthContextValue {
-  user: AdminUser | null;
+  user: ApiUser | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => { ok: boolean; error?: string };
-  logout: () => void;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  logout: () => Promise<void>;
 }
-
-const AUTH_KEY = 'sce_admin_session';
-
-const MOCK_ADMIN = {
-  email: 'admin@starcivic.com',
-  password: 'starcivic2025',
-  name: 'Star Civic Admin',
-  role: 'admin' as const,
-};
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AdminUser | null>(null);
+  const [user, setUser] = useState<ApiUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const raw = localStorage.getItem(AUTH_KEY);
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw));
-      } catch {
-        localStorage.removeItem(AUTH_KEY);
+    const bootstrap = async () => {
+      const token = tokenStore.getAccess();
+      if (!token) {
+        setIsLoading(false);
+        return;
       }
-    }
+      try {
+        const me = await authApi.me();
+        // Enforce admin-only on bootstrap too
+        if (me.role !== 'admin') {
+          tokenStore.clear();
+          setUser(null);
+        } else {
+          setUser(me);
+        }
+      } catch {
+        tokenStore.clear();
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    bootstrap();
   }, []);
 
-  const login = (email: string, password: string) => {
-    const normalizedEmail = email.trim().toLowerCase();
+  const login = async (email: string, password: string) => {
+    try {
+      const user = await authApi.login(email.trim().toLowerCase(), password);
 
-    if (
-      normalizedEmail === MOCK_ADMIN.email &&
-      password === MOCK_ADMIN.password
-    ) {
-      const admin: AdminUser = {
-        email: MOCK_ADMIN.email,
-        name: MOCK_ADMIN.name,
-        role: 'admin',
-      };
-      setUser(admin);
-      localStorage.setItem(AUTH_KEY, JSON.stringify(admin));
+      // Enforce admin-only at the client side
+      if (user.role !== 'admin') {
+        await authApi.logout();
+        tokenStore.clear();
+        return {
+          ok: false,
+          error: 'Only administrators can access this system.',
+        };
+      }
+
+      setUser(user);
       return { ok: true };
+    } catch (err) {
+      return { ok: false, error: getErrorMessage(err) };
     }
-
-    return { ok: false, error: 'Invalid email or password.' };
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await authApi.logout();
     setUser(null);
-    localStorage.removeItem(AUTH_KEY);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

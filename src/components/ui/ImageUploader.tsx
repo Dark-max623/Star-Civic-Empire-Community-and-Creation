@@ -1,36 +1,34 @@
 import { useRef, useState, type DragEvent, type ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { compressImage } from '../../utils/imageUpload';
 
 export interface UploadedImage {
-  url: string;
+  file: File;
   alt: string;
-  sizeBytes: number;
-  fileName: string;
+  previewUrl: string;
 }
 
 interface ImageUploaderProps {
   onUpload: (images: UploadedImage[]) => void;
   maxFiles?: number;
   label?: string;
+  maxFileSizeMB?: number;
 }
 
 export const ImageUploader = ({
   onUpload,
   maxFiles = 10,
   label = 'Drag & drop images here, or click to browse',
+  maxFileSizeMB = 5,
 }: ImageUploaderProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [error, setError] = useState('');
 
-  const handleFiles = async (files: FileList | File[]) => {
+  const maxBytes = maxFileSizeMB * 1024 * 1024;
+
+  const handleFiles = (files: FileList | File[]) => {
     setError('');
-    const fileArray = Array.from(files).filter((f) =>
-      f.type.startsWith('image/')
-    );
+    const fileArray = Array.from(files).filter((f) => f.type.startsWith('image/'));
 
     if (fileArray.length === 0) {
       setError('Please select valid image files.');
@@ -42,35 +40,19 @@ export const ImageUploader = ({
       return;
     }
 
-    setIsProcessing(true);
-    setProgress({ done: 0, total: fileArray.length });
-
-    const results: UploadedImage[] = [];
-
-    for (let i = 0; i < fileArray.length; i++) {
-      const file = fileArray[i];
-      try {
-        const dataUrl = await compressImage(file);
-        results.push({
-          url: dataUrl,
-          alt: file.name.replace(/\.[^/.]+$/, ''),
-          sizeBytes: Math.round(dataUrl.length * 0.75),
-          fileName: file.name,
-        });
-      } catch (err) {
-        console.error('Failed to process:', file.name, err);
-      }
-      setProgress({ done: i + 1, total: fileArray.length });
+    const tooLarge = fileArray.find((f) => f.size > maxBytes);
+    if (tooLarge) {
+      setError(`"${tooLarge.name}" exceeds ${maxFileSizeMB}MB.`);
+      return;
     }
 
-    setIsProcessing(false);
-    setProgress({ done: 0, total: 0 });
+    const uploaded: UploadedImage[] = fileArray.map((file) => ({
+      file,
+      alt: file.name.replace(/\.[^/.]+$/, ''),
+      previewUrl: URL.createObjectURL(file),
+    }));
 
-    if (results.length > 0) {
-      onUpload(results);
-    } else {
-      setError('No images could be processed.');
-    }
+    onUpload(uploaded);
 
     if (inputRef.current) inputRef.current.value = '';
   };
@@ -98,12 +80,12 @@ export const ImageUploader = ({
         }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        onClick={() => !isProcessing && inputRef.current?.click()}
+        onClick={() => inputRef.current?.click()}
         className={`relative cursor-pointer border-2 border-dashed rounded-sm p-8 md:p-12 text-center transition-all duration-200 ${
           isDragging
             ? 'border-gold-primary bg-gold-primary/5 scale-[1.01]'
             : 'border-text-muted hover:border-gold-primary hover:bg-gold-primary/5'
-        } ${isProcessing ? 'pointer-events-none opacity-70' : ''}`}
+        }`}
       >
         <input
           ref={inputRef}
@@ -114,47 +96,18 @@ export const ImageUploader = ({
           className="hidden"
         />
 
-        <AnimatePresence mode="wait">
-          {isProcessing ? (
-            <motion.div
-              key="processing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center gap-3"
-            >
-              <div className="w-10 h-10 border-2 border-gold-primary/30 border-t-gold-primary rounded-full animate-spin" />
-              <p className="text-text-primary text-sm font-medium">
-                Processing {progress.done} of {progress.total}...
-              </p>
-              <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-                <motion.div
-                  animate={{
-                    width: `${
-                      progress.total
-                        ? (progress.done / progress.total) * 100
-                        : 0
-                    }%`,
-                  }}
-                  className="h-full bg-gold-primary"
-                />
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="idle"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center gap-3"
-            >
-              <div className="text-4xl text-gold-primary">⬆</div>
-              <p className="text-text-primary text-sm font-medium">{label}</p>
-              <p className="text-text-muted text-xs">
-                JPG, PNG, WebP · up to {maxFiles} file{maxFiles > 1 ? 's' : ''} · auto-compressed
-              </p>
-            </motion.div>
-          )}
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="text-4xl text-gold-primary">⬆</div>
+            <p className="text-text-primary text-sm font-medium">{label}</p>
+            <p className="text-text-muted text-xs">
+              JPG, PNG, WebP · up to {maxFiles} file{maxFiles > 1 ? 's' : ''} · max {maxFileSizeMB}MB each
+            </p>
+          </motion.div>
         </AnimatePresence>
       </div>
 

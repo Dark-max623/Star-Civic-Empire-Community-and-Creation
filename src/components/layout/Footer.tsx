@@ -7,20 +7,27 @@ export const Footer = () => {
   return (
     <footer className="bg-black border-t border-white/5 pt-16 pb-8">
       <div className="section-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
-        {/* Column 1: Company Info */}
+        {/* Column 1: Brand + Mission */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="text-gold-primary font-extrabold text-xl tracking-tight">
-              STAR CIVIC EMPIRE
+              STAR CIVIC
             </span>
             <span className="text-text-primary text-xs font-light tracking-widest">
-              GROUP
+              EMPIRE
             </span>
           </div>
-          <p className="text-text-subtle text-sm leading-relaxed max-w-xs">
-            Redefining moments, creating memories. A luxury conglomerate spanning events,
-            banquets, fashions, and philanthropy.
+
+          <p className="text-gold-primary text-[11px] uppercase tracking-widest font-medium">
+            Community &amp; Creation
           </p>
+
+          <p className="text-text-subtle text-sm leading-relaxed max-w-xs">
+            Empowering talent. Inspiring creativity. Transforming communities.
+            A community-driven organization nurturing potential, fostering
+            collaboration, and creating opportunities for everyone to shine.
+          </p>
+
           <p className="text-text-muted text-xs mt-2">
             © {currentYear} Star Civic Empire. All rights reserved.
           </p>
@@ -72,6 +79,9 @@ export const Footer = () => {
           <h4 className="text-text-primary font-semibold uppercase tracking-widest text-sm">
             Stay Updated
           </h4>
+          <p className="text-text-subtle text-xs leading-relaxed">
+            Get the latest on events, opportunities, and community initiatives.
+          </p>
           <NewsletterForm />
         </div>
       </div>
