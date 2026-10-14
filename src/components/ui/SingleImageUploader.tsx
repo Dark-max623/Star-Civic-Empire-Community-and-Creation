@@ -14,7 +14,7 @@ export const SingleImageUploader = ({
 
   const handleUpload = (images: UploadedImage[]) => {
     if (images[0]) {
-      onChange(images[0].url);
+      onChange(images[0].previewUrl);
       setShowUploader(false);
     }
   };
@@ -30,9 +30,6 @@ export const SingleImageUploader = ({
         <div className="flex-1 min-w-0">
           <p className="text-text-primary text-xs font-medium truncate">
             Image ready
-          </p>
-          <p className="text-text-muted text-[10px]">
-            {(value.length * 2 / 1024).toFixed(0)} KB
           </p>
         </div>
         <button

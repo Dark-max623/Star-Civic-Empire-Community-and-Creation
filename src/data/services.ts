@@ -4,6 +4,7 @@ export const services: Service[] = [
   {
     id: 'entertainment',
     title: 'Star Civic Entertainment',
+    slug: 'star-civic-entertainment',
     tagline: 'Moments That Matter',
     description:
       'From cultural showcases to community concerts, we create events that celebrate talent and bring people together. Every production is a platform for emerging artists and performers.',
@@ -14,6 +15,7 @@ export const services: Service[] = [
   {
     id: 'fashion',
     title: 'Star Civic Fashion & Modelling',
+    slug: 'star-civic-fashion-modelling',
     tagline: 'Style With Purpose',
     description:
       'We nurture the next generation of models, designers, and stylists — providing runway opportunities, editorial shoots, and mentorship to build careers from the ground up.',
@@ -24,6 +26,7 @@ export const services: Service[] = [
   {
     id: 'talent',
     title: 'Star Civic Talent Development',
+    slug: 'star-civic-talent-development',
     tagline: 'Discover Your Potential',
     description:
       'Workshops, mentorship programs, and performance opportunities that help individuals build confidence, refine their craft, and turn their abilities into lasting careers.',
@@ -34,6 +37,7 @@ export const services: Service[] = [
   {
     id: 'community',
     title: 'Star Civic Community Initiatives',
+    slug: 'star-civic-community-initiatives',
     tagline: 'Strengthening Communities',
     description:
       'Outreach programs, cultural events, and social initiatives that create positive change — empowering young people and building stronger, more connected communities.',

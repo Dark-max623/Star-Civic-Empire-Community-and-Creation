@@ -28,7 +28,9 @@ export const ImageUploader = ({
 
   const handleFiles = (files: FileList | File[]) => {
     setError('');
-    const fileArray = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    const fileArray = Array.from(files).filter((f) =>
+      f.type.startsWith('image/')
+    );
 
     if (fileArray.length === 0) {
       setError('Please select valid image files.');
@@ -81,9 +83,9 @@ export const ImageUploader = ({
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
-        className={`relative cursor-pointer border-2 border-dashed rounded-sm p-8 md:p-12 text-center transition-all duration-200 ${
+        className={`relative cursor-pointer border-2 border-dashed rounded-sm px-4 py-5 text-center transition-all duration-200 ${
           isDragging
-            ? 'border-gold-primary bg-gold-primary/5 scale-[1.01]'
+            ? 'border-gold-primary bg-gold-primary/5'
             : 'border-text-muted hover:border-gold-primary hover:bg-gold-primary/5'
         }`}
       >
@@ -100,13 +102,16 @@ export const ImageUploader = ({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center gap-3"
+            className="flex flex-row items-center justify-center gap-3 flex-wrap"
           >
-            <div className="text-4xl text-gold-primary">⬆</div>
-            <p className="text-text-primary text-sm font-medium">{label}</p>
-            <p className="text-text-muted text-xs">
-              JPG, PNG, WebP · up to {maxFiles} file{maxFiles > 1 ? 's' : ''} · max {maxFileSizeMB}MB each
-            </p>
+            <span className="text-xl text-gold-primary">⬆</span>
+            <span className="text-text-primary text-xs font-medium">
+              {label}
+            </span>
+            <span className="text-text-muted text-[11px]">
+              JPG, PNG, WebP · up to {maxFiles} file{maxFiles > 1 ? 's' : ''} · max{' '}
+              {maxFileSizeMB}MB
+            </span>
           </motion.div>
         </AnimatePresence>
       </div>
